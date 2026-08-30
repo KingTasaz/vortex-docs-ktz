@@ -11,7 +11,11 @@ DEBUG: bool = False
 LOGDOCS: bool = False
 PARSEWARNINGS: bool = False
 
+<<<<<<< HEAD
 UISCALE: float = 0.8
+=======
+UISCALE: float = 0.75
+>>>>>>> 61eeaf7 (explorer interactions)
 FONT: str = "consolas"
 
 class Colors:
@@ -19,12 +23,16 @@ class Colors:
     background1 = (37, 37, 37, 255)
     background2 = (57, 57, 57, 255)
     text1 = (190, 190, 190, 255)
+<<<<<<< HEAD
     text2 = (110, 110, 110, 255)
     textred = (150, 90, 90, 255)
     textgreen = (90, 150, 90, 255)
     textblue = (90, 90, 150, 255)
     hover1 = (255, 255, 255, 100)
     hover2 = (255, 255, 255, 50)
+=======
+    hover1 = (255, 255, 255, 100)
+>>>>>>> 61eeaf7 (explorer interactions)
 
 
 # MARK: File Manager
@@ -297,6 +305,7 @@ class Documentation:
             self.Open: bool = False
 
             self.Rect: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+<<<<<<< HEAD
 
             if data is not None:
                 self.Data: Documentation.DocData = data
@@ -408,6 +417,11 @@ class Documentation:
     def __init__(self, fM: FileManager, win: Window, mode: int, windowWidth: int, windowHeight: int):
         self.mode: int = mode
 
+=======
+
+
+    def __init__(self, fM: FileManager, mode: int, windowWidth: int, windowHeight: int):
+>>>>>>> 61eeaf7 (explorer interactions)
         if (mode == self.MODE_EDIT):
             raise NotImplementedError("File Editting has not been implemented")
 
@@ -534,10 +548,13 @@ class Documentation:
         self._scroll = max(self._scroll, self.getScrollMax())
         self._scroll = min(self._scroll, 0)
 
+<<<<<<< HEAD
         if self.selectedItem is not None:
             self.selectedItem.draw(surface, 
                 int(self.explorerWidth), 0, int(self.ww - self.explorerWidth), self.wh)
 
+=======
+>>>>>>> 61eeaf7 (explorer interactions)
         pygame.draw.rect(
             surface,
             Colors.background2,
@@ -572,18 +589,24 @@ class Documentation:
                 surface.blit(temp, (item.Rect.x, item.Rect.y))
                 # temp is required for transparency
 
+<<<<<<< HEAD
             if item is self.selectedItem:
                 temp = pygame.Surface((item.Rect.w, item.Rect.h), pygame.SRCALPHA)
                 pygame.draw.rect(temp, Colors.hover2, temp.get_rect(), border_radius=10)
                 surface.blit(temp, (item.Rect.x, item.Rect.y))
 
+=======
+>>>>>>> 61eeaf7 (explorer interactions)
     def mouse(self, x: int, y: int, click: bool, isRight: bool = False):
         self.mx = x
         self.my = y
 
+<<<<<<< HEAD
         if x > self.explorerWidth:
             return
 
+=======
+>>>>>>> 61eeaf7 (explorer interactions)
         if not click:
             return
 
@@ -594,11 +617,15 @@ class Documentation:
             if item.itemType == self.Item.FOLDER:
                 item.Open = not item.Open
             else:
+<<<<<<< HEAD
                 self.selectedItem = item
 
             break
         else:
             self.selectedItem = None
+=======
+                ...
+>>>>>>> 61eeaf7 (explorer interactions)
 
         self.update()
 
@@ -625,7 +652,11 @@ class Window:
         # Pygame
         self.window: pygame.Surface = pygame.display.set_mode((width, height))
         self.clock: pygame.time.Clock = pygame.time.Clock()
+<<<<<<< HEAD
         pygame.display.set_caption(self.getWindowTitle())
+=======
+        pygame.display.set_caption(f"{TITLE} - v{VERSION}")
+>>>>>>> 61eeaf7 (explorer interactions)
         pygame.display.set_icon(self.File.getSymbol("logo.png"))
 
         # Pygame Variables
@@ -633,9 +664,14 @@ class Window:
         self.labelFont = pygame.font.SysFont(FONT, int(32 * UISCALE))
 
         # Objects
+<<<<<<< HEAD
         launchMode: int = Documentation.MODE_READONLY
         if DEBUG: launchMode = Documentation.MODE_DEBUG
         self.Docs: Documentation = Documentation(self.File, self, launchMode, self.width, self.height)
+=======
+        self.setLabel("Loading Documentation...")
+        self.Docs: Documentation = Documentation(self.File, Documentation.MODE_READONLY, self.width, self.height)
+>>>>>>> 61eeaf7 (explorer interactions)
 
     def handleEvents(self):
         self.mx, self.my = pygame.mouse.get_pos()
@@ -675,6 +711,7 @@ class Window:
         self.window.blit(text, (x, y))
         pygame.display.flip()
 
+<<<<<<< HEAD
     def setWindowLoadingProgress(self, labelText: str, percent: float):
         text: pygame.Surface = self.labelFont.render(labelText, True, Colors.text1)
         x = self.width / 2 - text.get_width() / 2
@@ -702,6 +739,8 @@ class Window:
             title += " - DEBUG MODE"
         return title
 
+=======
+>>>>>>> 61eeaf7 (explorer interactions)
 
 def main():
     pygame.display.init()

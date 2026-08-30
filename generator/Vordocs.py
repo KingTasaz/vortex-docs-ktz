@@ -3,7 +3,7 @@ import pathlib
 import pygame
 
 TITLE: str = "Vordocs"
-VERSION: str = "0.0.1"
+VERSION: str = "0.0.2"
 
 UISCALE: float = 0.75
 FONT: str = "consolas"
@@ -53,13 +53,17 @@ class Documentation:
     MODE_READONLY = 0
     MODE_EDIT = 1
 
+    class DocData:
+        def __init__(self) -> None:
+            pass    # title, description, revision, summary, sections, etc...
+
     class Item:
         FOLDER = 0
         CLASS = 1
         DATATYPE = 2
         GLOBAL = 3
 
-        def __init__(self, itemType: int, name: str, filePath: str) -> None:
+        def __init__(self, itemType: int, name: str, filePath: str, data: Documentation.DocData | None = None) -> None:
             self.itemType: int = itemType
             self.Name: str = name
 
@@ -75,6 +79,12 @@ class Documentation:
             self.Open: bool = False
 
             self.Rect: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+
+            if data is not None:
+                self.Data: Documentation.DocData = data
+
+        def draw(self, surface: pygame.Surface):
+            ...
 
 
     def __init__(self, fM: FileManager, mode: int, windowWidth: int, windowHeight: int):
@@ -121,6 +131,9 @@ class Documentation:
         ]
         self.arrowClosed = pygame.transform.scale(self.File.getSymbol("arrowClosed.png"), (self.arrowSize, self.arrowSize))
         self.arrowOpen = pygame.transform.scale(self.File.getSymbol("arrowOpen.png"), (self.arrowSize, self.arrowSize))
+
+        # Menus
+        self.selectedItem: Documentation.Item | None = None
 
         self.update()
 
@@ -214,9 +227,15 @@ class Documentation:
                 surface.blit(temp, (item.Rect.x, item.Rect.y))
                 # temp is required for transparency
 
+        if self.selectedItem is not None:
+            self.selectedItem.draw(surface)
+
     def mouse(self, x: int, y: int, click: bool, isRight: bool = False):
         self.mx = x
         self.my = y
+
+        if x > self.explorerWidth:
+            return
 
         if not click:
             return
@@ -228,7 +247,11 @@ class Documentation:
             if item.itemType == self.Item.FOLDER:
                 item.Open = not item.Open
             else:
-                ...
+                self.selectedItem = item
+
+            break
+        else:
+            self.selectedItem = None
 
         self.update()
 

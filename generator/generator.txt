@@ -8,12 +8,21 @@ At some point pygame was depricated so the new package name is pygame-ce
 
 Features:
 
-[ ] - Window
-[ ] - File View
-[ ] - Symbols
+[x] - Window
+[x] - File View
+[x] - Symbols
 [ ] - Click to view object
 [ ] - markdown rendering?
 [ ] - description editting
 [ ] - Adding fields (functions, events, methods, etc)
 [ ] - Adding/removing items from those fields
 [ ] - Inheritence
+
+
+Implementation:
+    I think it would be easiest to include a bit of metadata within each file under the comments.
+    Just stuff like "<!-- Inherits: path/to/blank.md -->", or "<!-- Depricated -->"
+    Or even "<!-- Property: Transform/Name String description description description -->"
+    Python should be able to parse these special comment flags and convert them into a workable data format
+    On export, it should be able to create these flags again if the object has been editted, and 
+    generate correct markdown to both convey the information, but also follow the format that has become convention

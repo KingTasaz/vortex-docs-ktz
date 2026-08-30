@@ -1,0 +1,19 @@
+Hi this is KingTasaz I am working on a tiny app to possibly generate
+these markdown files.
+
+This will become very important when there are thousands of files.
+
+Im gonna make it in pygame because that is what i am most comfortable with.
+At some point pygame was depricated so the new package name is pygame-ce
+
+Features:
+
+[ ] - Window
+[ ] - File View
+[ ] - Symbols
+[ ] - Click to view object
+[ ] - markdown rendering?
+[ ] - description editting
+[ ] - Adding fields (functions, events, methods, etc)
+[ ] - Adding/removing items from those fields
+[ ] - Inheritence

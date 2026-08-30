@@ -1,11 +1,12 @@
 import os
 import pathlib
 import pygame
+from typing import Any
 
 TITLE: str = "Vordocs"
 VERSION: str = "0.0.2"
 
-UISCALE: float = 0.75
+UISCALE: float = 1
 FONT: str = "consolas"
 
 class Colors:
@@ -63,7 +64,7 @@ class Documentation:
         DATATYPE = 2
         GLOBAL = 3
 
-        def __init__(self, itemType: int, name: str, filePath: str, data: Documentation.DocData | None = None) -> None:
+        def __init__(self, itemType: int, name: str, filePath: str, data: Any | None = None) -> None:
             self.itemType: int = itemType
             self.Name: str = name
 
@@ -334,7 +335,7 @@ def main():
 
     w, h = pygame.display.get_desktop_sizes()[0]
 
-    win = Window(int(w / 1.5), int(h / 1.5))
+    win = Window(int(w / 1.2), int(h / 1.2))
 
     while (win.running):
         win.step()

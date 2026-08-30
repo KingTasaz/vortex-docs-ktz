@@ -5,15 +5,18 @@ import pygame
 TITLE: str = "Vordocs"
 VERSION: str = "0.0.1"
 
-UISCALE: float = 1
+UISCALE: float = 0.75
 FONT: str = "consolas"
 
 class Colors:
     black = (0, 0, 0)
     background1 = (37, 37, 37, 255)
+    background2 = (57, 57, 57, 255)
     text1 = (190, 190, 190, 255)
+    hover1 = (255, 255, 255, 100)
 
 
+# MARK: File Manager
 class FileManager:
     """
     The FileManager will automatically handle finding, parsing, and exporting markdown files.
@@ -45,6 +48,7 @@ class FileManager:
         
 
 
+# MARK: Documentation
 class Documentation:
     MODE_READONLY = 0
     MODE_EDIT = 1
@@ -70,8 +74,10 @@ class Documentation:
             self.children: list[Documentation.Item] = []
             self.Open: bool = False
 
+            self.Rect: pygame.Rect = pygame.Rect(0, 0, 0, 0)
 
-    def __init__(self, fM: FileManager, mode: int):
+
+    def __init__(self, fM: FileManager, mode: int, windowWidth: int, windowHeight: int):
         if (mode == self.MODE_EDIT):
             raise NotImplementedError("File Editting has not been implemented")
 
@@ -79,14 +85,21 @@ class Documentation:
 
         self.x = 0
         self.y = 0
-        self.scroll = 0
+        self._scroll = 0
 
         self.idxSpacing = 20 * UISCALE
         self.indSpacing = 30 * UISCALE
         self.arrowSize = 20 * UISCALE
         self.iconSize = self.arrowSize
 
+        self.ww = windowWidth
+        self.wh = windowHeight
+
+        self.explorerWidth = 400 * UISCALE
+
         self.font = pygame.font.SysFont(FONT, int(20 * UISCALE))
+
+        self.mx, self.my = -100, -100
 
         # Build File Tree
         print("[Documentation] Building FileTree")
@@ -147,11 +160,9 @@ class Documentation:
         item.indent = idn
         self.drawList.append(item)
 
-        print(item.Name, item.index, item.indent)
-
         idx += 1
 
-        if item.Open or True:
+        if item.Open:
             idn += 1
 
             for child in item.children:
@@ -166,9 +177,20 @@ class Documentation:
         self._update(0, 0, self.Explorer[0])
 
     def draw(self, surface: pygame.Surface):
+        self._scroll = max(self._scroll, self.getScrollMax())
+        self._scroll = min(self._scroll, 0)
+
+        pygame.draw.rect(
+            surface,
+            Colors.background2,
+            (self.x, self.y, self.explorerWidth, self.wh)
+        )
+
         for item in self.drawList:
             x = self.x + item.indent * self.indSpacing
-            y = self.y + item.index * self.idxSpacing - self.scroll
+            y = self.y + item.index * self.idxSpacing + self._scroll
+
+            x0 = x
 
             if (len(item.children) > 0):
                 img = self.arrowOpen if item.Open else self.arrowClosed
@@ -178,36 +200,88 @@ class Documentation:
             surface.blit(self.Icons[item.itemType], (x, y))
 
             x += self.iconSize
-            surface.blit(self.font.render(item.Name, True, Colors.text1), (x, y))
+            text: pygame.Surface = self.font.render(item.Name, True, Colors.text1)
+            surface.blit(text, (x, y))
+
+            item.Rect.x = x0
+            item.Rect.y = y
+            item.Rect.w = self.explorerWidth - x0
+            item.Rect.h = self.iconSize
+
+            if item.Rect.collidepoint(self.mx, self.my):
+                temp = pygame.Surface((item.Rect.w, item.Rect.h), pygame.SRCALPHA)
+                pygame.draw.rect(temp, Colors.hover1, temp.get_rect(), border_radius=10)
+                surface.blit(temp, (item.Rect.x, item.Rect.y))
+                # temp is required for transparency
+
+    def mouse(self, x: int, y: int, click: bool, isRight: bool = False):
+        self.mx = x
+        self.my = y
+
+        if not click:
+            return
+
+        for item in self.drawList:
+            if not item.Rect.collidepoint(self.mx, self.my):
+                continue
+
+            if item.itemType == self.Item.FOLDER:
+                item.Open = not item.Open
+            else:
+                ...
+
+        self.update()
+
+    def scroll(self, scrollAmount: int):
+        self._scroll += scrollAmount
+
+    def getScrollMax(self) -> int:
+        return -int(max(self.idxSpacing * len(self.drawList) - self.wh, 0))
 
 
 
+# MARK: Window
 class Window:
     def __init__(self, width: int, height: int):
         self.File: FileManager = FileManager()
 
+        # Variables
         self.width: int = width
         self.height: int = height
 
+        self.running = True
+        self.mx, self.my = -100, -100
+
+        # Pygame
         self.window: pygame.Surface = pygame.display.set_mode((width, height))
         self.clock: pygame.time.Clock = pygame.time.Clock()
         pygame.display.set_caption(f"{TITLE} - v{VERSION}")
         pygame.display.set_icon(self.File.getSymbol("logo.png"))
 
+        # Pygame Variables
         self.ExplorerSurface: pygame.Surface = pygame.Surface((width, height), pygame.SRCALPHA)
+        self.labelFont = pygame.font.SysFont(FONT, int(32 * UISCALE))
 
-        self.running = True
-        self.mx, self.my = -100, -100
-        
-        self.Docs: Documentation = Documentation(self.File, Documentation.MODE_READONLY)
+        # Objects
+        self.setLabel("Loading Documentation...")
+        self.Docs: Documentation = Documentation(self.File, Documentation.MODE_READONLY, self.width, self.height)
 
     def handleEvents(self):
-        # self.mx, self.my = pygame.mouse.get_pos()
-        # keys = pygame.key.get_pressed()
+        self.mx, self.my = pygame.mouse.get_pos()
+        keys = pygame.key.get_pressed()
+
+        self.Docs.mouse(self.mx, self.my, False)
 
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 self.running = False
+            elif e.type == pygame.MOUSEBUTTONDOWN:
+                if e.button == pygame.BUTTON_LEFT:
+                    self.Docs.mouse(self.mx, self.my, True)
+                elif e.button == pygame.BUTTON_RIGHT:
+                    self.Docs.mouse(self.mx, self.my, True, isRight=True)
+            elif e.type == pygame.MOUSEWHEEL:
+                self.Docs.scroll(e.y * 30)
 
     def step(self):
         self.ExplorerSurface.fill(Colors.background1)
@@ -220,6 +294,15 @@ class Window:
 
         pygame.display.flip()
         self.clock.tick(60)
+
+    def setLabel(self, labelText: str):
+        text: pygame.Surface = self.labelFont.render(labelText, True, Colors.text1)
+        x = self.width / 2 - text.get_width() / 2
+        y = self.height / 2 - text.get_height() / 2
+
+        self.window.fill(Colors.background1)
+        self.window.blit(text, (x, y))
+        pygame.display.flip()
 
 
 def main():

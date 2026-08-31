@@ -417,11 +417,14 @@ class Documentation:
     def __init__(self, fM: FileManager, win: Window, mode: int, windowWidth: int, windowHeight: int):
         self.mode: int = mode
 
+<<<<<<< HEAD
 =======
 
 
     def __init__(self, fM: FileManager, mode: int, windowWidth: int, windowHeight: int):
 >>>>>>> 61eeaf7 (explorer interactions)
+=======
+>>>>>>> d58b010 (loading bar)
         if (mode == self.MODE_EDIT):
             raise NotImplementedError("File Editting has not been implemented")
 
@@ -511,15 +514,23 @@ class Documentation:
         itemData: Documentation.DocData = self.DocData()
         itemData.parseFromFile(path)
 
+<<<<<<< HEAD
         if itemData.parseError and PARSEWARNINGS:
             print(f"[Documentation] [Parser] Unable to parse {name} (err{itemData.parseError})")
 
+=======
+        time.sleep(0.01)
+>>>>>>> d58b010 (loading bar)
 
         newItem: Documentation.Item = self.Item(itemType, name, path, data=itemData)
         parent.children.append(newItem)
 
         self.totalItems += 1
+<<<<<<< HEAD
         #print(self.totalItems, "/", self._expected)
+=======
+        print(self.totalItems, "/", self._expected)
+>>>>>>> d58b010 (loading bar)
         self.Window.setWindowLoadingProgress("Loading Documentation...", self.totalItems / self._expected)
 
     def _update(self, idx: int, idn: int, item: Item) -> int:
@@ -665,6 +676,7 @@ class Window:
 
         # Objects
 <<<<<<< HEAD
+<<<<<<< HEAD
         launchMode: int = Documentation.MODE_READONLY
         if DEBUG: launchMode = Documentation.MODE_DEBUG
         self.Docs: Documentation = Documentation(self.File, self, launchMode, self.width, self.height)
@@ -672,6 +684,11 @@ class Window:
         self.setLabel("Loading Documentation...")
         self.Docs: Documentation = Documentation(self.File, Documentation.MODE_READONLY, self.width, self.height)
 >>>>>>> 61eeaf7 (explorer interactions)
+=======
+        launchMode: int = Documentation.MODE_READONLY
+        if DEBUG: launchMode = Documentation.MODE_DEBUG
+        self.Docs: Documentation = Documentation(self.File, self, launchMode, self.width, self.height)
+>>>>>>> d58b010 (loading bar)
 
     def handleEvents(self):
         self.mx, self.my = pygame.mouse.get_pos()
@@ -712,6 +729,9 @@ class Window:
         pygame.display.flip()
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> d58b010 (loading bar)
     def setWindowLoadingProgress(self, labelText: str, percent: float):
         text: pygame.Surface = self.labelFont.render(labelText, True, Colors.text1)
         x = self.width / 2 - text.get_width() / 2

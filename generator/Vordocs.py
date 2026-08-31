@@ -515,12 +515,15 @@ class Documentation:
         itemData.parseFromFile(path)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         if itemData.parseError and PARSEWARNINGS:
             print(f"[Documentation] [Parser] Unable to parse {name} (err{itemData.parseError})")
 
 =======
         time.sleep(0.01)
 >>>>>>> d58b010 (loading bar)
+=======
+>>>>>>> 5f817db (v0.0.4)
 
         newItem: Documentation.Item = self.Item(itemType, name, path, data=itemData)
         parent.children.append(newItem)

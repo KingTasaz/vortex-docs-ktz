@@ -5,8 +5,9 @@ from typing import Any
 import datetime
 
 TITLE: str = "Vordocs"
-VERSION: str = "0.0.2"
-DEBUG: bool = True
+VERSION: str = "0.0.3"
+DEBUG: bool = False
+LOGDOCS: bool = False
 
 UISCALE: float = 1
 FONT: str = "consolas"
@@ -111,14 +112,15 @@ class Documentation:
             self.summaryText: str = ""
             self.summarySections: list[Documentation.DocData.DocSection] = []
 
-        def _incrementParseOffset(self, lines: list[Any], offset: int) -> int:
+        def _incrementParseOffset(self, lines: list[Any], offset: int, error: bool = True) -> int:
             offset += 1
             if offset >= len(lines):
-                self.parseError = self.ERROR_EOF
+                if error: self.parseError = self.ERROR_EOF
                 return -1
             return offset
 
         def _parseHeader(self, lines: list[str], offset: int) -> int:
+            if LOGDOCS: print("[DOCUMENTATION] [PARSER] parsing header")
             # standard header is ---\ntitle: Part\ndescription: desc\n---
 
             while lines[offset].isspace():
@@ -162,15 +164,92 @@ class Documentation:
 
             return offset
 
+        def _parseSummary(self, lines: list[str], offset: int) -> int:
+            if LOGDOCS: print(f"[DOCUMENTATION] [PARSER] parsing summary ({offset})")
+            while not lines[offset].startswith("## Summary"):
+                offset = self._incrementParseOffset(lines, offset)
+                if (offset == -1):
+                    return -1
+
+            offset = self._incrementParseOffset(lines, offset, error=False)
+            if (offset == -1):
+                return -1
+
+            self.summaryText = lines[offset].strip("\n")
+
+            self.isStub = False     # summary was found
+            return offset
+
+        def _parseSection(self, lines: list[str], offset: int, sections: list[Documentation.DocData.DocSection]) -> int:
+            if LOGDOCS: print(f"[DOCUMENTATION] [PARSER] parsing next section ({offset})")
+
+            while not lines[offset].startswith("## "):
+                offset = self._incrementParseOffset(lines, offset, error=False)
+                if (offset == -1):
+                    if LOGDOCS: print("[DOCUMENTATION] [PARSER] no new section found")
+                    return -1
+                
+            newSection = self.DocSection()
+            newSection.Name = lines[offset].removeprefix("## ").removesuffix("\n")
+            if LOGDOCS: print(f"[DOCUMENTATION] [PARSER] new section: {newSection.Name}")
+
+            looking: bool = True
+            while looking:
+                newItem = self.DocSection.Item()
+                
+                if newSection.Name == "Properties":
+                    newItem.type = self.DocSection.Item.PROPERTY
+                elif newSection.Name == "Methods":
+                    newItem.type = self.DocSection.Item.METHOD
+                elif newSection.Name == "Events":
+                    newItem.type = self.DocSection.Item.EVENT
+
+                # find next item
+                offset = self._incrementParseOffset(lines, offset)
+                if (offset == -1):
+                    break
+
+                while not lines[offset].startswith("##"):
+                    offset = self._incrementParseOffset(lines, offset, error=False)
+                    if (offset == -1):
+                        looking = False
+                        break
+
+                if lines[offset].startswith("## "):  # ran into next section
+                    offset -= 1
+                    break
+            
+                if not looking: # end of file (expected)
+                    break
+
+                newItem.name = lines[offset].removeprefix("### ").removesuffix("\n")
+
+                newSection.Items.append(newItem)
+
+            sections.append(newSection)
+            return offset
+
+
         def parseFromFile(self, file: str):
+            if LOGDOCS: print(f"[DOCUMENTATION] [PARSER] == BEGIN FILE @ {file} ==")
+
             f = open(file)
             lines: list[str] = f.readlines()
             f.close()
 
             offset = self._incrementParseOffset(lines, -1)
-            if offset == -1:
-                return
+            if offset == -1: return
             offset = self._parseHeader(lines, offset)
+            if offset == -1: return
+
+            offset = self._incrementParseOffset(lines, offset)
+            if offset == -1: return
+            offset = self._parseSummary(lines, offset)
+            if offset == -1: return
+
+            offset = self._incrementParseOffset(lines, offset)
+            while offset != -1:
+                offset = self._parseSection(lines, offset, self.summarySections)
 
 
 
@@ -228,14 +307,14 @@ class Documentation:
             y: float = y0 + 15 * UISCALE + self.Scroll
             lineBreak: float = self.fontB.get_height()
             sectionSpaceSize: float = 30 * UISCALE
-            indent: float = 15 * UISCALE
+            indent: float = 10 * UISCALE
 
             t: pygame.Surface = self.fontH1.render(self.Data.Title, True, Colors.text1)
             surface.blit(t, (x, y))
             y += t.height
 
             t: pygame.Surface = self.fontB.render(self.Data.Description, True, Colors.text1)
-            surface.blit(t, (x, y))
+            surface.blit(t, (x + indent, y))
             y += t.height
 
             # Summary
@@ -252,8 +331,23 @@ class Documentation:
             y += t.height
 
             t: pygame.Surface = self.fontB.render(self.Data.summaryText, True, Colors.text1)
-            surface.blit(t, (x, y))
+            surface.blit(t, (x + indent, y))
             y += t.height
+
+            # Sections
+            for section in self.Data.summarySections:
+                y += sectionSpaceSize
+
+                t: pygame.Surface = self.fontH2.render(section.Name, True, Colors.text1)
+                surface.blit(t, (x, y))
+                y += t.height
+
+                for item in section.Items:
+                    y += lineBreak
+
+                    t: pygame.Surface = self.fontH3.render(item.name, True, Colors.text1)
+                    surface.blit(t, (x + indent, y))
+                    y += t.height
             
             self.maxY = y
 

@@ -6,7 +6,7 @@ import datetime
 import time
 
 TITLE: str = "Vordocs"
-VERSION: str = "0.0.3"
+VERSION: str = "0.0.4"
 DEBUG: bool = False
 LOGDOCS: bool = False
 
@@ -301,6 +301,9 @@ class Documentation:
                 text = pygame.font.SysFont(FONT, int(24 * UISCALE)).render(text, True, Colors.textred)
                 surface.blit(text, (x0 + w / 2 - text.width / 2, y0 + h / 2 - text.height / 2))
 
+                if not DEBUG:
+                    return
+
             # if hasPreGeneratedUIElementsToSimplfiyEdittingMode: draw those
             # otherwise:
 
@@ -445,7 +448,6 @@ class Documentation:
         itemData: Documentation.DocData = self.DocData()
         itemData.parseFromFile(path)
 
-        time.sleep(0.01)
 
         newItem: Documentation.Item = self.Item(itemType, name, path, data=itemData)
         parent.children.append(newItem)

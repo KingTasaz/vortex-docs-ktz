@@ -7,8 +7,9 @@ import time
 
 TITLE: str = "Vordocs"
 VERSION: str = "0.0.4"
-DEBUG: bool = False
+DEBUG: bool = True
 LOGDOCS: bool = False
+PARSEWARNINGS: bool = False
 
 UISCALE: float = 1
 FONT: str = "consolas"
@@ -448,12 +449,15 @@ class Documentation:
         itemData: Documentation.DocData = self.DocData()
         itemData.parseFromFile(path)
 
+        if itemData.parseError and PARSEWARNINGS:
+            print(f"[Documentation] [Parser] Unable to parse {name} (err{itemData.parseError})")
+
 
         newItem: Documentation.Item = self.Item(itemType, name, path, data=itemData)
         parent.children.append(newItem)
 
         self.totalItems += 1
-        print(self.totalItems, "/", self._expected)
+        #print(self.totalItems, "/", self._expected)
         self.Window.setWindowLoadingProgress("Loading Documentation...", self.totalItems / self._expected)
 
     def _update(self, idx: int, idn: int, item: Item) -> int:

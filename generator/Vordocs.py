@@ -3,6 +3,7 @@ import pathlib
 import pygame
 from typing import Any
 import datetime
+import time
 
 TITLE: str = "Vordocs"
 VERSION: str = "0.0.3"
@@ -351,17 +352,14 @@ class Documentation:
             
             self.maxY = y
 
-
-
-
-
-
-    def __init__(self, fM: FileManager, mode: int, windowWidth: int, windowHeight: int):
+    # MARK: Doc Init
+    def __init__(self, fM: FileManager, win: Window, mode: int, windowWidth: int, windowHeight: int):
         self.mode: int = mode
 
         if (mode == self.MODE_EDIT):
             raise NotImplementedError("File Editting has not been implemented")
 
+        self.Window: Window = win
         self.File: FileManager = fM
 
         self.x = 0
@@ -388,7 +386,9 @@ class Documentation:
         self.drawList: list[Documentation.Item] = []
         self.totalItems: int = 0
 
+        self._expected = -1
         tree: list[str] = ["reference"]
+    
         self.parseFolder(tree, self.Explorer)
         print(f"[Documentation] Scanned {self.totalItems} items")
 
@@ -414,6 +414,10 @@ class Documentation:
             folder: str = str(self.File.vorRoot) + "/debug/content/" + "/".join(tree)
         else:
             folder: str = str(self.File.contentRoot) + "/" + "/".join(tree)
+
+        if self._expected == -1:
+            self.Window.setWindowLoadingProgress("Loading Documentation...", 0)
+            self._expected = sum(len(f) for _, _, f in os.walk(folder))
 
         docFolder: Documentation.Item = self.Item(self.Item.FOLDER, tree[-1], folder)
         parent.append(docFolder)
@@ -441,10 +445,14 @@ class Documentation:
         itemData: Documentation.DocData = self.DocData()
         itemData.parseFromFile(path)
 
+        time.sleep(0.01)
+
         newItem: Documentation.Item = self.Item(itemType, name, path, data=itemData)
         parent.children.append(newItem)
 
         self.totalItems += 1
+        print(self.totalItems, "/", self._expected)
+        self.Window.setWindowLoadingProgress("Loading Documentation...", self.totalItems / self._expected)
 
     def _update(self, idx: int, idn: int, item: Item) -> int:
         item.index = idx
@@ -570,10 +578,9 @@ class Window:
         self.labelFont = pygame.font.SysFont(FONT, int(32 * UISCALE))
 
         # Objects
-        self.setLabel("Loading Documentation...")
         launchMode: int = Documentation.MODE_READONLY
         if DEBUG: launchMode = Documentation.MODE_DEBUG
-        self.Docs: Documentation = Documentation(self.File, launchMode, self.width, self.height)
+        self.Docs: Documentation = Documentation(self.File, self, launchMode, self.width, self.height)
 
     def handleEvents(self):
         self.mx, self.my = pygame.mouse.get_pos()
@@ -612,6 +619,27 @@ class Window:
         self.window.fill(Colors.background1)
         self.window.blit(text, (x, y))
         pygame.display.flip()
+
+    def setWindowLoadingProgress(self, labelText: str, percent: float):
+        text: pygame.Surface = self.labelFont.render(labelText, True, Colors.text1)
+        x = self.width / 2 - text.get_width() / 2
+        y = self.height / 2 - text.get_height() / 2
+
+        bar0 = pygame.Rect(0, 0, self.width * 0.25, self.height * 0.01)
+        bar0.center = (self.width / 2, self.height / 2 + self.height * 0.1)
+        bar1 = pygame.Rect(bar0.x + bar0.w * 0.01 / 2,
+                           bar0.y + bar0.h * 0.05 / 2,
+                           bar0.w * percent * 0.99,
+                           bar0.height * 0.95
+        )
+
+        self.window.fill(Colors.background1)
+        self.window.blit(text, (x, y))
+        pygame.draw.rect(self.window, Colors.black, bar0, border_radius=bar0.h)
+        pygame.draw.rect(self.window, Colors.textgreen, bar1, border_radius=bar1.h)
+        
+        pygame.display.flip()
+
 
     def getWindowTitle(self) -> str:
         title: str = f"{TITLE} - v{VERSION}"

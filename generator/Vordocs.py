@@ -7,7 +7,7 @@ import time
 
 TITLE: str = "Vordocs"
 VERSION: str = "0.0.4"
-DEBUG: bool = False
+DEBUG: bool = True
 LOGDOCS: bool = False
 PARSEWARNINGS: bool = False
 
@@ -516,6 +516,7 @@ class Documentation:
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         if itemData.parseError and PARSEWARNINGS:
             print(f"[Documentation] [Parser] Unable to parse {name} (err{itemData.parseError})")
 
@@ -524,16 +525,25 @@ class Documentation:
 >>>>>>> d58b010 (loading bar)
 =======
 >>>>>>> 5f817db (v0.0.4)
+=======
+        if itemData.parseError and PARSEWARNINGS:
+            print(f"[Documentation] [Parser] Unable to parse {name} (err{itemData.parseError})")
+
+>>>>>>> f64fce2 (parse error messages)
 
         newItem: Documentation.Item = self.Item(itemType, name, path, data=itemData)
         parent.children.append(newItem)
 
         self.totalItems += 1
 <<<<<<< HEAD
+<<<<<<< HEAD
         #print(self.totalItems, "/", self._expected)
 =======
         print(self.totalItems, "/", self._expected)
 >>>>>>> d58b010 (loading bar)
+=======
+        #print(self.totalItems, "/", self._expected)
+>>>>>>> f64fce2 (parse error messages)
         self.Window.setWindowLoadingProgress("Loading Documentation...", self.totalItems / self._expected)
 
     def _update(self, idx: int, idn: int, item: Item) -> int:

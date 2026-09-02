@@ -7,7 +7,7 @@ import time
 
 TITLE: str = "Vordocs"
 VERSION: str = "0.0.4"
-DEBUG: bool = True
+DEBUG: bool = False
 LOGDOCS: bool = False
 PARSEWARNINGS: bool = False
 
@@ -94,6 +94,9 @@ class Documentation:
             def __init__(self) -> None:
                 self.Name: str = "{section}"
                 self.Items: list[Documentation.DocData.DocSection.Item] = []
+                
+                self.Raw: str = ""
+                self.isRaw: bool = False
 
 
         def __init__(self) -> None:
@@ -114,6 +117,7 @@ class Documentation:
             self.summaryText: str = ""
             self.summarySections: list[Documentation.DocData.DocSection] = []
 
+        # MARK: Parsing
         def _incrementParseOffset(self, lines: list[Any], offset: int, error: bool = True) -> int:
             offset += 1
             if offset >= len(lines):
@@ -194,6 +198,26 @@ class Documentation:
             newSection = self.DocSection()
             newSection.Name = lines[offset].removeprefix("## ").removesuffix("\n")
             if LOGDOCS: print(f"[DOCUMENTATION] [PARSER] new section: {newSection.Name}")
+
+            if newSection.Name not in ["Properties", "Methods", "Events"]:
+                if LOGDOCS: print(f"[DOCUMENTATION] [PARSER] Generic Section '{newSection.Name}'")
+
+                raw: list[str] = []
+                eof: bool = False
+                offset += 1
+                while not lines[offset].startswith("## "):
+                    offset = self._incrementParseOffset(lines, offset, error=False)
+                    if (offset == -1):
+                        eof = True
+                        break
+
+                    raw.append(lines[offset])
+
+                newSection.isRaw = True
+                newSection.Raw = "".join(raw)
+
+                if eof:
+                    return -1
 
             looking: bool = True
             while looking:
@@ -277,9 +301,13 @@ class Documentation:
             if data is not None:
                 self.Data: Documentation.DocData = data
 
-            self.Scroll: int = 0
-            self.maxScroll: int = 0
+            self.ScrollY: int = 0
+            self.maxScrollY: int = 0
             self.maxY: float = 0
+
+            self.ScrollX: int = 0
+            self.maxScrollX: int = 0
+            self.maxX: float = 0
 
             # Rendering
             self.fontH1 = pygame.font.SysFont(FONT, int(36 * UISCALE))
@@ -287,6 +315,7 @@ class Documentation:
             self.fontH3 = pygame.font.SysFont(FONT, int(24 * UISCALE))
             self.fontB = pygame.font.SysFont(FONT, int(16 * UISCALE))
 
+        # MARK: Doc Draw
         def draw(self, surface: pygame.Surface, x0: int, y0: int, w: int, h: int):
             if self.Data.parseError:
                 text = "An Unknown Errro has Occursed"
@@ -308,18 +337,22 @@ class Documentation:
             # if hasPreGeneratedUIElementsToSimplfiyEdittingMode: draw those
             # otherwise:
 
-            x: float = x0 + 15 * UISCALE
-            y: float = y0 + 15 * UISCALE + self.Scroll
+            x: float = x0 + 15 * UISCALE + self.ScrollX
+            y: float = y0 + 15 * UISCALE + self.ScrollY
             lineBreak: float = self.fontB.get_height()
             sectionSpaceSize: float = 30 * UISCALE
             indent: float = 10 * UISCALE
 
+            xMax = x
+
             t: pygame.Surface = self.fontH1.render(self.Data.Title, True, Colors.text1)
             surface.blit(t, (x, y))
+            xMax = max(xMax, t.get_rect().right)
             y += t.height
 
             t: pygame.Surface = self.fontB.render(self.Data.Description, True, Colors.text1)
             surface.blit(t, (x + indent, y))
+            xMax = max(xMax, t.get_rect().right)
             y += t.height
 
             # Summary
@@ -328,15 +361,20 @@ class Documentation:
             if self.Data.isStub:
                 t: pygame.Surface = self.fontB.render("Stub", True, Colors.text2)
                 surface.blit(t, (x, y))
+                xMax = max(xMax, t.get_rect().right)
+
                 self.maxY = y
+                self.maxX = xMax
                 return
 
             t: pygame.Surface = self.fontH2.render("Summary", True, Colors.text1)
             surface.blit(t, (x, y))
+            xMax = max(xMax, t.get_rect().right)
             y += t.height
 
             t: pygame.Surface = self.fontB.render(self.Data.summaryText, True, Colors.text1)
             surface.blit(t, (x + indent, y))
+            xMax = max(xMax, t.get_rect().right)
             y += t.height
 
             # Sections
@@ -345,16 +383,26 @@ class Documentation:
 
                 t: pygame.Surface = self.fontH2.render(section.Name, True, Colors.text1)
                 surface.blit(t, (x, y))
+                xMax = max(xMax, t.get_rect().right)
                 y += t.height
+
+                if section.isRaw:
+                    t: pygame.Surface = self.fontB.render(section.Raw, True, Colors.text1)
+                    surface.blit(t, (x + indent, y))
+                    xMax = max(xMax, t.get_rect().right)
+                    y += t.height
+                    continue
 
                 for item in section.Items:
                     y += lineBreak
 
                     t: pygame.Surface = self.fontH3.render(item.name, True, Colors.text1)
                     surface.blit(t, (x + indent, y))
+                    xMax = max(xMax, t.get_rect().right)
                     y += t.height
             
             self.maxY = y
+            self.maxX = xMax
 
     # MARK: Doc Init
     def __init__(self, fM: FileManager, win: Window, mode: int, windowWidth: int, windowHeight: int):
@@ -481,9 +529,14 @@ class Documentation:
         self.drawList.clear()
         self._update(0, 0, self.Explorer[0])
 
+    # MARK: Explorer Draw
     def draw(self, surface: pygame.Surface):
         self._scroll = max(self._scroll, self.getScrollMax())
         self._scroll = min(self._scroll, 0)
+
+        if self.selectedItem is not None:
+            self.selectedItem.draw(surface, 
+                int(self.explorerWidth), 0, int(self.ww - self.explorerWidth), self.wh)
 
         pygame.draw.rect(
             surface,
@@ -523,10 +576,6 @@ class Documentation:
                 temp = pygame.Surface((item.Rect.w, item.Rect.h), pygame.SRCALPHA)
                 pygame.draw.rect(temp, Colors.hover2, temp.get_rect(), border_radius=10)
                 surface.blit(temp, (item.Rect.x, item.Rect.y))
-
-        if self.selectedItem is not None:
-            self.selectedItem.draw(surface, 
-                int(self.explorerWidth), 0, int(self.ww - self.explorerWidth), self.wh)
 
     def mouse(self, x: int, y: int, click: bool, isRight: bool = False):
         self.mx = x

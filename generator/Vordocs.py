@@ -7,7 +7,7 @@ import time
 
 TITLE: str = "Vordocs"
 VERSION: str = "0.0.4"
-DEBUG: bool = True
+DEBUG: bool = False
 LOGDOCS: bool = False
 PARSEWARNINGS: bool = False
 
@@ -573,12 +573,18 @@ class Documentation:
         self._scroll = min(self._scroll, 0)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> b64dfc8 (render all sections)
         if self.selectedItem is not None:
             self.selectedItem.draw(surface, 
                 int(self.explorerWidth), 0, int(self.ww - self.explorerWidth), self.wh)
 
+<<<<<<< HEAD
 =======
 >>>>>>> 61eeaf7 (explorer interactions)
+=======
+>>>>>>> b64dfc8 (render all sections)
         pygame.draw.rect(
             surface,
             Colors.background2,
@@ -619,8 +625,11 @@ class Documentation:
                 pygame.draw.rect(temp, Colors.hover2, temp.get_rect(), border_radius=10)
                 surface.blit(temp, (item.Rect.x, item.Rect.y))
 
+<<<<<<< HEAD
 =======
 >>>>>>> 61eeaf7 (explorer interactions)
+=======
+>>>>>>> b64dfc8 (render all sections)
     def mouse(self, x: int, y: int, click: bool, isRight: bool = False):
         self.mx = x
         self.my = y

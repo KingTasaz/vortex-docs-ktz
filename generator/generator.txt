@@ -6,6 +6,8 @@ This will become very important when there are thousands of files.
 Im gonna make it in pygame because that is what i am most comfortable with.
 At some point pygame was depricated so the new package name is pygame-ce
 
+This was written with Python 3.14.3
+
 Features:
 
 [x] - Window

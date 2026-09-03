@@ -12,10 +12,14 @@ LOGDOCS: bool = False
 PARSEWARNINGS: bool = False
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 UISCALE: float = 0.8
 =======
 UISCALE: float = 0.75
 >>>>>>> 61eeaf7 (explorer interactions)
+=======
+UISCALE: float = 0.8
+>>>>>>> 7e68f56 (lower ui scale a tiny bit)
 FONT: str = "consolas"
 
 class Colors:

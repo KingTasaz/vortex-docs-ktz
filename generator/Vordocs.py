@@ -11,7 +11,7 @@ DEBUG: bool = False
 LOGDOCS: bool = False
 PARSEWARNINGS: bool = False
 
-UISCALE: float = 1
+UISCALE: float = 0.8
 FONT: str = "consolas"
 
 class Colors:
